@@ -1,200 +1,876 @@
-// DirectHarvest demo — no backend, localStorage only
-const $=id=>document.getElementById(id);
-const store={get:(k,d)=>{try{const v=localStorage.getItem('dh_'+k);return v?JSON.parse(v):d}catch(e){return d}},set:(k,v)=>localStorage.setItem('dh_'+k,JSON.stringify(v))};
+/**
+ * AgriDirect B2B Exchange - Pure Vanilla JavaScript Engine
+ * Runs completely standalone without any node_modules, build steps, or external JS libraries.
+ */
 
-// ---- i18n ----
-const I={
-en:{tagline:'Fair price. Direct deal. No middleman.',login:'Login',logout:'Logout',pilot:'Phase 1 Pilot demo • full clickable prototype',hero:'Farmers list. Shops compare. Deal directly.',herosub:'Public price board, listings, orders, chat with auto-translation, UPI + delivery mock, ratings. Kannada / Hindi / Malayalam / English.',transNote:'Chat demo: farmer in Kannada ↔ shop in English auto-translates. Try it in Orders → Chat.',asFarmer:'Enter as Farmer',asShop:'Enter as Shopkeeper',openDash:'Open dashboard',priceBoard:'Public Price Board',boardSub:'Live avg per crop per region (demo data)',trend:'Trend',f1t:'Farmer posts',f1d:'Crop, qty, ₹/kg, harvest date, photo. Sees mandi benchmark before pricing.',f2t:'Shop compares',f2d:'Filter by crop, price, distance, freshness, rating. Side-by-side compare.',f3t:'Direct deal',f3d:'Order → accept/counter → UPI escrow → delivery slot → rating. Fee 2% shown openly.',phone:'Phone',name:'Name',place:'Village / Shop place',continue:'Continue',back:'Back',newList:'New listing',publish:'Publish',myList:'My listings',earn:'Earnings',browse:'Browse & compare',compare:'Compare',viewCmp:'View',orders:'Orders',chat:'Chat',chatHint:'Demo translator: common words translate, rest shown with [→lang] tag. In real app plug Google/Bhashini API.',foot:'every rupee visible'},
-kn:{tagline:'ನ್ಯಾಯ ಬೆಲೆ. ನೇರ ವ್ಯವಹಾರ. ಮಧ್ಯವರ್ತಿ ಇಲ್ಲ.',login:'ಲಾಗಿನ್',logout:'ಲಾಗ್ಔಟ್',pilot:'ಹಂತ 1 ಪೈಲಟ್ ಡೆಮೊ • ಪೂರ್ಣ ಕ್ಲಿಕ್ ಮೂಲಮಾದರಿ',hero:'ರೈತರು ಪಟ್ಟಿ ಮಾಡಿ. ಅಂಗಡಿಗಳು ಹೋಲಿಸಿ. ನೇರವಾಗಿ ವ್ಯವಹರಿಸಿ.',herosub:'ಸಾರ್ವಜನಿಕ ಬೆಲೆ ಪಟ್ಟಿ, ಪಟ್ಟಿಗಳು, ಆರ್ಡರ್‌ಗಳು, ಸ್ವಯಂ-ಅನುವಾದ ಚಾಟ್, UPI + ವಿತರಣೆ, ರೇಟಿಂಗ್. ಕನ್ನಡ / ಹಿಂದಿ / ಮಲಯಾಳಂ / ಇಂಗ್ಲಿಷ್.',transNote:'ಚಾಟ್ ಡೆಮೊ: ಕನ್ನಡದಲ್ಲಿ ರೈತ ↔ ಇಂಗ್ಲಿಷ್‌ನಲ್ಲಿ ಅಂಗಡಿ ಸ್ವಯಂ-ಅನುವಾದ. ಆರ್ಡರ್ → ಚಾಟ್‌ನಲ್ಲಿ ಪ್ರಯತ್ನಿಸಿ.',asFarmer:'ರೈತರಾಗಿ ಪ್ರವೇಶಿಸಿ',asShop:'ಅಂಗಡಿಯಾಗಿ ಪ್ರವೇಶಿಸಿ',openDash:'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ತೆರೆಯಿರಿ',priceBoard:'ಸಾರ್ವಜನಿಕ ಬೆಲೆ ಪಟ್ಟಿ',boardSub:'ಪ್ರತಿ ಬೆಳೆಗೆ ಸರಾಸರಿ ಬೆಲೆ (ಡೆಮೊ)',trend:'ಪ್ರವೃತ್ತಿ',f1t:'ರೈತ ಪೋಸ್ಟ್',f1d:'ಬೆಳೆ, ಪ್ರಮಾಣ, ₹/ಕೆಜಿ, ಕೊಯ್ಲು ದಿನಾಂಕ. ಮಂಡಿ ಬೆಲೆ ನೋಡಿ ಬೆಲೆ ಇಡಿ.',f2t:'ಅಂಗಡಿ ಹೋಲಿಕೆ',f2d:'ಬೆಳೆ, ಬೆಲೆ, ದೂರ, ತಾಜಾತನ, ರೇಟಿಂಗ್‌ನಿಂದ ಫಿಲ್ಟರ್. ಪಕ್ಕ-ಪಕ್ಕ ಹೋಲಿಕೆ.',f3t:'ನೇರ ವ್ಯವಹಾರ',f3d:'ಆರ್ಡರ್ → ಒಪ್ಪು/ಪ್ರತಿ-ಬೆಲೆ → UPI → ವಿತರಣೆ → ರೇಟಿಂಗ್. ಶುಲ್ಕ 2% ಬಹಿರಂಗ.',phone:'ಫೋನ್',name:'ಹೆಸರು',place:'ಗ್ರಾಮ / ಅಂಗಡಿ ಸ್ಥಳ',continue:'ಮುಂದುವರಿಸಿ',back:'ಹಿಂದೆ',newList:'ಹೊಸ ಪಟ್ಟಿ',publish:'ಪ್ರಕಟಿಸಿ',myList:'ನನ್ನ ಪಟ್ಟಿಗಳು',earn:'ಆದಾಯ',browse:'ಹುಡುಕಿ & ಹೋಲಿಸಿ',compare:'ಹೋಲಿಸಿ',viewCmp:'ನೋಡಿ',orders:'ಆರ್ಡರ್‌ಗಳು',chat:'ಚಾಟ್',chatHint:'ಡೆಮೊ ಅನುವಾದಕ: ಸಾಮಾನ್ಯ ಪದಗಳು ಅನುವಾದ, ಉಳಿದವು [→lang] ಟ್ಯಾಗ್. ನಿಜವಾದ ಆ್ಯಪ್‌ನಲ್ಲಿ Google/Bhashini API.',foot:'ಪ್ರತಿ ರೂಪಾಯಿ ಗೋಚರ'},
-hi:{tagline:'सही दाम. सीधा सौदा. बिचौलिया नहीं.',login:'लॉगिन',logout:'लॉगआउट',pilot:'फेज 1 पायलट डेमो • पूर्ण क्लिक प्रोटोटाइप',hero:'किसान लिस्ट करें. दुकान तुलना करें. सीधे सौदा करें.',herosub:'पब्लिक भाव बोर्ड, लिस्टिंग, ऑर्डर, ऑटो-अनुवाद चैट, UPI + डिलीवरी, रेटिंग. कन्नड़ / हिन्दी / मलयालम / English.',transNote:'चैट डेमो: किसान कन्नड़ में ↔ दुकानदार English में, ऑटो-अनुवाद. Orders → Chat में देखें.',asFarmer:'किसान बनकर प्रवेश',asShop:'दुकानदार बनकर प्रवेश',openDash:'डैशबोर्ड खोलें',priceBoard:'सार्वजनिक भाव बोर्ड',boardSub:'हर फसल का औसत भाव (डेमो)',trend:'रुझान',f1t:'किसान पोस्ट',f1d:'फसल, मात्रा, ₹/किलो, कटाई तिथि. मंडी भाव देखकर दाम रखें.',f2t:'दुकान तुलना',f2d:'फसल, दाम, दूरी, ताजगी, रेटिंग से फिल्टर. साथ-साथ तुलना.',f3t:'सीधा सौदा',f3d:'ऑर्डर → स्वीकार/काउंटर → UPI एस्क्रो → डिलीवरी → रेटिंग. फीस 2% खुली.',phone:'फोन',name:'नाम',place:'गाँव / दुकान पता',continue:'आगे बढ़ें',back:'वापस',newList:'नई लिस्टिंग',publish:'प्रकाशित करें',myList:'मेरी लिस्टिंग',earn:'कमाई',browse:'खोजें और तुलना करें',compare:'तुलना',viewCmp:'देखें',orders:'ऑर्डर',chat:'चैट',chatHint:'डेमो अनुवादक: आम शब्द अनूदित, बाकी [→lang] टैग के साथ. असली ऐप में Google/Bhashini API लगाएँ.',foot:'हर रुपया दिखेगा'},
-ml:{tagline:'ന്യായമായ വില. നേരിട്ടുള്ള ഇടപാട്. ഇടനിലക്കാരില്ല.',login:'ലോഗിൻ',logout:'ലോഗ്ഔട്ട്',pilot:'ഫേസ് 1 പൈലറ്റ് ഡെമോ • പൂർണ്ണ ക്ലിക്ക് പ്രോട്ടോടൈപ്പ്',hero:'കർഷകർ ലിസ്റ്റ് ചെയ്യൂ. കടകൾ താരതമ്യം ചെയ്യൂ. നേരിട്ട് ഇടപാട്.',herosub:'പബ്ലിക് വില ബോർഡ്, ലിസ്റ്റിംഗ്, ഓർഡർ, ഓട്ടോ-വിവർത്തന ചാറ്റ്, UPI + ഡെലിവറി, റേറ്റിംഗ്.',transNote:'ചാറ്റ് ഡെമോ: കന്നഡയിൽ കർഷകൻ ↔ ഇംഗ്ലീഷിൽ കടക്കാരൻ, ഓട്ടോ-വിവർത്തനം. Orders → Chat ൽ നോക്കൂ.',asFarmer:'കർഷകനായി പ്രവേശിക്കൂ',asShop:'കടക്കാരനായി പ്രവേശിക്കൂ',openDash:'ഡാഷ്ബോർഡ് തുറക്കൂ',priceBoard:'പൊതു വില ബോർഡ്',boardSub:'വിളയ്ക്ക് ശരാശരി വില (ഡെമോ)',trend:'ട്രെൻഡ്',f1t:'കർഷക പോസ്റ്റ്',f1d:'വിള, അളവ്, ₹/കിലോ, വിളവെടുപ്പ് തീയതി. മണ്ഡി വില നോക്കി വിലയിടൂ.',f2t:'കട താരതമ്യം',f2d:'വിള, വില, ദൂരം, പുതുമ, റേറ്റിംഗ് ഫിൽട്ടർ. താരതമ്യം.',f3t:'നേരിട്ട് ഇടപാട്',f3d:'ഓർഡർ → സ്വീകരിക്കൂ/കൗണ്ടർ → UPI → ഡെലിവറി → റേറ്റിംഗ്. ഫീസ് 2% പരസ്യം.',phone:'ഫോൺ',name:'പേര്',place:'ഗ്രാമം / കട സ്ഥലം',continue:'തുടരൂ',back:'തിരികെ',newList:'പുതിയ ലിസ്റ്റിംഗ്',publish:'പ്രസിദ്ധീകരിക്കൂ',myList:'എന്റെ ലിസ്റ്റിംഗുകൾ',earn:'വരുമാനം',browse:'തിരയൂ & താരതമ്യം ചെയ്യൂ',compare:'താരതമ്യം',viewCmp:'കാണൂ',orders:'ഓർഡറുകൾ',chat:'ചാറ്റ്',chatHint:'ഡെമോ വിവർത്തകൻ: സാധാരണ വാക്കുകൾ വിവർത്തനം, ബാക്കി [→lang] ടാഗിൽ. യഥാർത്ഥ ആപ്പിൽ Google/Bhashini API.',foot:'ഓരോ രൂപയും ദൃശ്യം'}
-};
-let LANG=store.get('lang','en');
-function t(k){return (I[LANG]&&I[LANG][k])||I.en[k]||k}
-function setLang(l){LANG=l;store.set('lang',l);applyI();drawBoard();renderAll();
-  document.querySelectorAll('#langs button').forEach(b=>b.classList.toggle('on',b.dataset.lang===l))}
-function applyI(){document.querySelectorAll('[data-i]').forEach(el=>{const k=el.getAttribute('data-i');if(I[LANG][k])el.textContent=I[LANG][k]});document.querySelectorAll('#langs button').forEach(b=>b.classList.toggle('on',b.dataset.lang===LANG))}
+(function () {
+  'use strict';
 
-// ---- demo data ----
-const EMO={'Tomato 🍅':'🍅','Onion 🧅':'🧅','Potato 🥔':'🥔','Banana 🍌':'🍌','Mango 🥭':'🥭','Chilli 🌶':'🌶'};
-let listings=store.get('listings',[
- {id:'L1',crop:'Tomato 🍅',farmer:'Ravi (Mandya)',phone:'***210',qty:200,price:22,dist:8,rate:4.6,fresh:'today',lang:'kn'},
- {id:'L2',crop:'Tomato 🍅',farmer:'Suresh (Mysuru)',phone:'***335',qty:150,price:20,dist:15,rate:4.2,fresh:'yesterday',lang:'kn'},
- {id:'L3',crop:'Onion 🧅',farmer:'Fatima (Belgaum)',phone:'***118',qty:500,price:28,dist:12,rate:4.8,fresh:'today',lang:'hi'},
- {id:'L4',crop:'Banana 🍌',farmer:'Joseph (Kochi)',phone:'***772',qty:100,price:35,dist:20,rate:4.5,fresh:'today',lang:'ml'},
- {id:'L5',crop:'Potato 🥔',farmer:'Ravi (Mandya)',phone:'***210',qty:300,price:24,dist:8,rate:4.6,fresh:'2 days',lang:'kn'}
-]);
-let orders=store.get('orders',[
- {id:'O101',listingId:'L1',crop:'Tomato 🍅',qty:50,price:22,status:'confirmed',farmer:'Ravi (Mandya)',shop:'Kumar Store',history:['placed 10:00','confirmed 10:20'],rating:0}
-]);
-let chats=store.get('chats',{'O101':[
- {me:false,text:'ನಮಸ್ಕಾರ, ಟೊಮೆಟೊ 50 ಕೆಜಿ ಬೇಕು',lang:'kn'},
- {me:true,text:'Yes, ready. Today evening delivery?',lang:'en'}
-]});
-let cmp=[]; let user=store.get('user',null);
-function save(){store.set('listings',listings);store.set('orders',orders);store.set('chats',chats)}
+  // --- DATA & ASSETS ---
+  const BRAND_LOGO = 'https://lh3.googleusercontent.com/aida/AEtjO1V5TFcGHeVA9e7qV-VW-ONHQXlp3ADAC7A6CmlKVrOEZ3C7hkcjAHM2N38sAhzUG2a7T549JrOSXtzsggGgxpbKPRmWvoBNkgnzqWOGDOABhb4TzW1zR02-JcgO7DtKOHl-Ybq8TtZFehuA6ggXNPRTss_mR7d3MeIcsoO_4kjkZtoBevXLQzY3j6MLihqu7pP5GfGjNzVLIEO66DUQPIiEHs7J7hCsHXE4ixq9I3CMBgMMNTZIaHsVgx4';
+  const USER_AVATAR = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBTJtg-Lj_TBKX4m2ksjyPD3WXdboJdPHGZ6MegYeMScPmK9TEVtMBCuvmDDAoEi66VhIrY7ar0fm7aNnBD5EMq3qwZfnqdkchYO4bSAjgxUK633AZ1eVT7VAoN8KfFl8572aoYWkB-l1EFL2-rxgdcAzg_gr4WRmT7a9iVbJW-0Da7yuDoXf17HcOxEBBwvp-9SB_iAmxsOyi5DGo_dUm101mCm7hDKYwtUvVEEZ2mXroYiT7z8ub2';
 
-// ---- phrasebook translator (demo) ----
-const PB=[
- ['ನಮಸ್ಕಾರ','hello','नमस्ते','ഹലോ'],
- ['ಟೊಮೆಟೊ','tomato','टमाटर','തക്കാളി'],
- ['ಈರುಳ್ಳಿ','onion','प्याज','ഉള്ളി'],
- ['ಬೆಲೆ','price','कीमत','വില'],
- ['ಎಷ್ಟು','how much','कितना','എത്ര'],
- ['ಬೇಕு','want','चाहिए','വേണം'],
- ['ಕೆಜಿ','kg','किलो','കിലോ'],
- ['ವಿತರಣೆ','delivery','डिलीवरी','ഡെലിവറി'],
- ['ಸರಿ','ok','ठीक','ശരി'],
- ['ನಾಳೆ','tomorrow','कल','നാളെ'],
- ['ಇಂದು','today','आज','ഇന്ന്']
-];
-function detectLang(s){if(/[\u0C80-\u0CFF]/.test(s))return 'kn';if(/[\u0900-\u097F]/.test(s))return 'hi';if(/[\u0D00-\u0D7F]/.test(s))return 'ml';return 'en'}
-function fakeTranslate(text,to){
-  let out=text;
-  PB.forEach(row=>{
-    const cols={kn:0,en:1,hi:2,ml:3};
-    row.forEach((w,i)=>{ if(to===['kn','en','hi','ml'][i]){ row.forEach(src=>{ if(src!==w) out=out.replace(new RegExp(src,'gi'),w) }) } });
-  });
-  const from=detectLang(text);
-  if(from===to) return text;
-  if(out===text) return text+` [→${to}]`;
-  return out+` (auto ${from}→${to} demo)`;
-}
+  const COMMODITIES = [
+    { id: 'onion', name: 'Nashik Red Onion', directRate: 38.4, mandiRate: 52.0, farmerPayout: 29.1, savingsPct: 26.1, icon: 'eco' },
+    { id: 'potato', name: 'Potato (Jyoti Fresh)', directRate: 28.8, mandiRate: 38.0, farmerPayout: 21.84, savingsPct: 24.2, icon: 'nutrition' },
+    { id: 'tomato', name: 'Hybrid Roma Tomatoes', directRate: 33.6, mandiRate: 48.0, farmerPayout: 25.5, savingsPct: 30.0, icon: 'yard' },
+    { id: 'wheat', name: 'Wheat (Sharbati Golden)', directRate: 32.5, mandiRate: 42.0, farmerPayout: 27.2, savingsPct: 22.6, icon: 'grain' },
+    { id: 'apple', name: 'Royal Delicious Apple', directRate: 138.0, mandiRate: 190.0, farmerPayout: 112.0, savingsPct: 27.3, icon: 'energy_savings_leaf' }
+  ];
 
-// ---- nav ----
-function show(id){['view-landing','view-auth','view-dash'].forEach(v=>$(v).style.display=v===id?'block':'none');window.scrollTo(0,0)}
-function toast(m){const x=$('toast');x.textContent=m;x.style.display='block';setTimeout(()=>x.style.display='none',2600)}
-function quickLogin(role){user={role,name:role==='farmer'?'Ravi (demo farmer)':'Kumar (demo shop)',place:role==='farmer'?'Mandya':'Gandhinagar'};store.set('user',user);enterDash()}
-function doLogin(){user={role:$('a_role').value,name:$('a_name').value||'Demo user',place:$('a_place').value||'Mandya',phone:$('a_phone').value};store.set('user',user);enterDash();toast('Logged in (demo) ✅')}
-function logout(){user=null;store.set('user',null);syncAuth();show('view-landing')}
-function syncAuth(){$('loginBtn').style.display=user?'none':'';$('logoutBtn').style.display=user?'':'none'}
-function enterDash(){syncAuth();show('view-dash');buildTabs();renderAll();
-  $('meLine').textContent=(user.name||'')+' • '+(user.place||'');
-  $('roleBadge').textContent=user.role}
+  let harvestLots = [
+    {
+      id: 'lot-1',
+      lotNumber: 'LOT #ON-8821',
+      commodity: 'Nashik Red Onions',
+      variety: 'Export Sort Garwa',
+      grade: 'GRADE A AGMARK',
+      producerName: 'Ramesh Gaikwad',
+      location: 'Satana Hub, Nashik',
+      distanceKm: 42,
+      availableQuantity: 45,
+      quantityUnit: 'Quintals',
+      directRateNum: 34.0,
+      mandiRateFormatted: '₹48.5/kg',
+      directRateFormatted: '₹34.0/kg',
+      savingsPct: 29.8,
+      fulfillmentRate: 98.4,
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDTXm-Z7Nknc-7gO_vN-v5h4UvP-y8UuD5hP2-H1C42lXzZ7YfN1e7Dk4X1X3yqP1p7V9bUq4oGv9G3iZ1tYp_Jk_1Ww_1L=w800',
+      coldChainReady: true
+    },
+    {
+      id: 'lot-2',
+      lotNumber: 'LOT #TM-4419',
+      commodity: 'Hybrid Roma Tomatoes',
+      variety: 'Firm Crimson Crated',
+      grade: 'GRADE A+ SORTED',
+      producerName: 'Sunita Verma',
+      location: 'Kolar Valley Hub',
+      distanceKm: 85,
+      availableQuantity: 60,
+      quantityUnit: 'Crates',
+      directRateNum: 28.0,
+      mandiRateFormatted: '₹44.0/kg',
+      directRateFormatted: '₹28.0/kg',
+      savingsPct: 36.3,
+      fulfillmentRate: 99.1,
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAYFh9GZJz8-lB-vX_zK4wH0rJ7R4zR-9kQ1J9tY5W3_gK2U0bC7pD4gE5-8oK9sU3_7Q0zW1mN9oP5tY7xJ2lH=w800',
+      coldChainReady: true
+    },
+    {
+      id: 'lot-3',
+      lotNumber: 'LOT #PT-5520',
+      commodity: 'Kufri Jyoti Potatoes',
+      variety: 'Agra Cold Storage Bypass',
+      grade: '45MM+ SORTED',
+      producerName: 'Harish Chandra',
+      location: 'Agra South Hub',
+      distanceKm: 120,
+      availableQuantity: 80,
+      quantityUnit: 'Bags',
+      directRateNum: 23.5,
+      mandiRateFormatted: '₹34.0/kg',
+      directRateFormatted: '₹23.5/kg',
+      savingsPct: 30.8,
+      fulfillmentRate: 97.8,
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB4V1N4YwJ-r8W_vL1kH0_mN4pQ9yU3zR7oK2-8jH1_pQ6tY9xW3-0bE7gN1zM5-vL8kR2_4W0zN9pQ=w800',
+      coldChainReady: false
+    }
+  ];
 
-// tabs per role
-function buildTabs(){
-  const r=user?user.role:'shop';
-  const tabs=r==='farmer'?[['farmer','🚜 Listings'],['orders','🧾 Orders'],['chat','💬 Chat'],['more','⋯ More']]
-    :r==='admin'?[['orders','🧾 Orders'],['chat','💬 Chat'],['more','🛡 Admin']]
-    :[['shop','🏪 Browse'],['orders','🧾 Orders'],['chat','💬 Chat'],['more','⋯ More']];
-  $('dashTabs').innerHTML=tabs.map((x,i)=>`<button data-t="${x[0]}" class="${i===0?'on':''}" onclick="openTab('${x[0]}')">${x[1]}</button>`).join('');
-  openTab(tabs[0][0]);
-}
-function openTab(n){
-  document.querySelectorAll('#dashTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===n));
-  $('tab-farmer-listings').style.display=n==='farmer'?'grid':'none';
-  $('tab-shop-browse').style.display=n==='shop'?'block':'none';
-  $('tab-orders').style.display=n==='orders'?'block':'none';
-  $('tab-chat').style.display=n==='chat'?'block':'none';
-  $('tab-more').style.display=n==='more'?'grid':'none';
-  if(n==='orders')renderOrders(); if(n==='chat')renderChat();
-}
+  let orders = [
+    {
+      id: 'ord-4491',
+      orderNumber: '#ORD-4491',
+      lotNumber: '#LOT-ON-8821',
+      commodity: 'Nashik Cured Red Onions',
+      quantityStr: '15 Quintals (1,500 kg)',
+      farmerName: 'Ramesh Gaikwad',
+      cluster: 'Satana Farm Cluster, Nashik',
+      escrowAmount: 51000,
+      status: 'In Cold Transit',
+      chillerTemp: '4.2°C (Optimal)',
+      truckNumber: 'MH-04-8921',
+      eta: '05:00 AM (1h 15m)',
+      driverName: 'Santosh Yadav',
+      tokenHash: '0x8841F9A2c4189'
+    },
+    {
+      id: 'ord-4482',
+      orderNumber: '#ORD-4482',
+      lotNumber: '#LOT-TM-4419',
+      commodity: 'Hybrid Roma Tomatoes',
+      quantityStr: '20 Crates (500 kg)',
+      farmerName: 'Sunita Verma',
+      cluster: 'Kolar Valley Cooperative',
+      escrowAmount: 14000,
+      status: 'Delivered & QC Verified',
+      chillerTemp: '11.2°C',
+      truckNumber: 'KA-07-TR-1192',
+      eta: 'Delivered 04:45 AM',
+      driverName: 'Anil Kumar',
+      tokenHash: '0x4482A1B79E104',
+      utrNumber: 'HDFC20250224901'
+    }
+  ];
 
-// ---- board + chart ----
-function drawBoard(){
-  const avg={}; const cnt={};
-  listings.forEach(l=>{const c=l.crop;avg[c]=(avg[c]||0)+l.price;cnt[c]=(cnt[c]||0)+1});
-  let h=`<tr><th>🥬</th><th>₹/kg</th><th>${t('trend')}</th></tr>`;
-  Object.keys(avg).forEach(c=>{h+=`<tr><td>${c}</td><td><b>₹${(avg[c]/cnt[c]).toFixed(1)}</b></td><td>📈 +${(cnt[c]*2)%9}%</td></tr>`});
-  $('boardTable').innerHTML=h;
-  const cv=$('trendChart'); if(!cv)return; const x=cv.getContext('2d');
-  x.clearRect(0,0,400,180); x.strokeStyle='#1b6b3a'; x.lineWidth=3; x.beginPath();
-  const pts=[22,24,21,26,23,28,25]; pts.forEach((p,i)=>{const px=20+i*55,py=160-p*4; i?x.lineTo(px,py):x.moveTo(px,py)});
-  x.stroke(); x.fillStyle='#12321f'; x.font='12px sans-serif'; x.fillText('Tomato 7-day ₹/kg (demo)',20,16);
-}
+  // --- STATE ---
+  let currentRoute = 'produce-marketplace';
+  let persona = 'shopkeeper';
+  let selectedSimCrop = COMMODITIES[0];
+  let simVolume = 30;
 
-// ---- farmer ----
-function addListing(){
-  const crop=$('f_crop').value,qty=+$('f_qty').value||0,price=+$('f_price').value||0,dist=+$('f_dist').value||5;
-  if(!qty||!price)return toast('Enter qty + price');
-  listings.unshift({id:'L'+Date.now(),crop,farmer:(user?user.name:'Farmer')+' ('+(user?user.place:'')+')',phone:'***new',qty,price,dist,rate:5.0,fresh:'today',lang:LANG});
-  save();renderAll();toast('Listing published ✅');
-}
-function renderMine(){
-  $('myListings').innerHTML=listings.slice(0,6).map(l=>`<div class="listing"><div class="emoji">${EMO[l.crop]||'🥬'}</div>
-   <div><b>${l.crop}</b> <span class="badge">✔</span><br><span class="muted">${l.qty}kg • ${l.dist}km • ⭐${l.rate} • ${l.fresh}</span></div>
-   <div style="text-align:right"><div class="price">₹${l.price}</div><button class="btn btn-ghost btn-sm" onclick="bump('${l.id}')">-₹1</button></div></div>`).join('')||'—';
-  const inc=orders.filter(o=>o.status!=='delivered').length;
-  $('earnBox').innerHTML=`Active: <b>${listings.length}</b> • Open orders: <b>${inc}</b> • Month income (demo): <b>₹18,400</b> • +22% vs middleman`;
-}
-function bump(id){const l=listings.find(x=>x.id===id);if(l){l.price=Math.max(1,l.price-1);save();renderAll()}}
+  // --- ROOT APP RENDERER ---
+  function renderApp() {
+    const root = document.getElementById('root');
+    if (!root) return;
 
-// ---- shop ----
-function renderShop(){
-  const q=($('s_q').value||'').toLowerCase(),mx=+$('s_max').value||9999,s=$('s_sort').value;
-  let arr=listings.filter(l=>l.crop.toLowerCase().includes(q)&&l.price<=mx);
-  if(s==='price')arr.sort((a,b)=>a.price-b.price); if(s==='dist')arr.sort((a,b)=>a.dist-b.dist); if(s==='rate')arr.sort((a,b)=>b.rate-a.rate);
-  $('shopList').innerHTML=arr.map(l=>`<div class="listing"><div class="emoji">${EMO[l.crop]||'🥬'}</div>
-   <div><b>${l.crop}</b> <span class="badge">✔ ${l.farmer}</span><br><span class="muted">${l.qty}kg • ₹${l.price}/kg • ${l.dist}km • ⭐${l.rate} • ${l.fresh} • ${l.lang.toUpperCase()}</span></div>
-   <div class="row"><button class="btn btn-ghost btn-sm" onclick="toggleCmp('${l.id}')">⚖</button>
-   <button class="btn btn-ghost btn-sm" onclick="fav('${l.id}')">❤</button>
-   <button class="btn btn-green btn-sm" onclick="order('${l.id}')">🛒 Order</button></div></div>`).join('')||'<p class="muted">No match. Try onion / tomato.</p>';
-  $('cmpN').textContent=cmp.length; $('cmpBox').innerHTML=cmp.map(id=>{const l=listings.find(x=>x.id===id);return l?`<span class="badge">${l.crop} ₹${l.price}</span>`:''}).join('');
-}
-function toggleCmp(id){cmp.includes(id)?cmp=cmp.filter(x=>x!==id):(cmp.length<3?cmp.push(id):toast('Max 3 to compare'));renderShop()}
-function showCompare(){
-  if(!cmp.length)return toast('Tap ⚖ on listings first');
-  $('cmpView').style.display='block';
-  $('cmpTable').innerHTML=`<table><tr><th></th>${cmp.map(id=>{const l=listings.find(x=>x.id===id);return `<th>${l.crop}<br>₹${l.price}/kg</th>`}).join('')}</tr>
-  <tr><td>Farmer</td>${cmp.map(id=>`<td>${listings.find(x=>x.id===id).farmer}</td>`).join('')}</tr>
-  <tr><td>Distance</td>${cmp.map(id=>`<td>${listings.find(x=>x.id===id).dist} km</td>`).join('')}</tr>
-  <tr><td>Rating</td>${cmp.map(id=>`<td>⭐${listings.find(x=>x.id===id).rate}</td>`).join('')}</tr>
-  <tr><td></td>${cmp.map(id=>`<td><button class="btn btn-green btn-sm" onclick="order('${id}')">Order</button></td>`).join('')}</tr></table>`;
-}
-function fav(id){toast('Saved to favourites ❤ (demo)')}
-function order(id){
-  const l=listings.find(x=>x.id===id); if(!l)return;
-  const qty=prompt(`Qty kg (avail ${l.qty})?`,'50'); if(!qty)return;
-  const fee=Math.round(qty*l.price*0.02), o={id:'O'+Math.floor(100+Math.random()*900),listingId:id,crop:l.crop,qty:+qty,price:l.price,fee,del:50,total:qty*l.price+fee+50,status:'placed',farmer:l.farmer,shop:user?user.name:'Demo shop',history:['placed '+new Date().toLocaleTimeString()],rating:0};
-  orders.unshift(o); chats[o.id]=[]; save(); renderAll(); openTab('orders'); toast('Order placed ✅ farmer notified');
-}
+    root.innerHTML = `
+      <div class="app-container">
+        <!-- Mandi Ticker -->
+        <div class="ticker-bar">
+          <div><span class="ticker-pulse"></span><strong>MANDI SPOT TICKER:</strong> Wheat ₹2,240/Q (+3.2%) • Nashik Onion ₹1,850/Q (-1.4%) • Tomato ₹940/Crate (+5.1%) • Potato ₹1,220/Q (Stable)</div>
+          <div>Public Node #AD-9812 • RBI Regulated Escrow</div>
+        </div>
 
-// ---- orders ----
-function renderOrders(){
-  const sel=$('chatOrder'); sel.innerHTML=orders.map(o=>`<option>${o.id} • ${o.crop} • ${o.status}</option>`).join('');
-  $('orderList').innerHTML=orders.map(o=>`<div class="listing"><div class="emoji">🧾</div>
-   <div><b>${o.id} • ${o.crop} ${o.qty}kg</b><br><span class="muted">${o.farmer} → ${o.shop} • ${o.history.join(' → ')}</span>
-   <div class="fee" style="margin-top:6px">Farmer ₹${o.qty*o.price} + fee 2% ₹${o.fee} + delivery ₹${o.del} = <b>₹${o.total}</b> • escrow ${o.status==='delivered'?'released ✅':'locked 🔒'}</div>
-   <div class="timeline">${['placed','confirmed','shipped','delivered'].map(s=>`<div class="step ${stage(o.status)>=stage(s)?'done':''}">${s}</div>`).join('')}</div></div>
-   <div class="row"><button class="btn btn-green btn-sm" onclick="setSt('${o.id}','confirmed')">✔ Accept</button>
-   <button class="btn btn-ghost btn-sm" onclick="counter('${o.id}')">↔ Counter</button>
-   <button class="btn btn-ghost btn-sm" onclick="setSt('${o.id}','shipped')">🚚 Ship</button>
-   <button class="btn btn-ghost btn-sm" onclick="setSt('${o.id}','delivered')">📦 Delivered</button>
-   <button class="btn btn-ghost btn-sm" onclick="openTab('chat')">💬 Chat</button></div></div>`).join('')||'No orders yet.';
-}
-function stage(s){return {placed:0,confirmed:1,shipped:2,delivered:3}[s]||0}
-function setSt(id,s){const o=orders.find(x=>x.id===id);o.status=s;o.history.push(s+' '+new Date().toLocaleTimeString());save();renderOrders();toast('Order '+id+' → '+s)}
-function counter(id){const p=prompt('Counter price ₹/kg?','21');if(!p)return;const o=orders.find(x=>x.id===id);o.price=+p;o.total=o.qty*o.price+o.fee+o.del;o.history.push('counter ₹'+p);save();renderOrders()}
-function ratePrompt(){const s=prompt('Rate 1-5?','5');if(s)toast('Thanks! Rated ⭐'+s+' (demo)')}
+        <!-- Header -->
+        <header class="header">
+          <div class="header-inner">
+            <button class="brand" id="brand-home-btn">
+              <img src="${BRAND_LOGO}" alt="AgriDirect" />
+              <div class="brand-text">
+                <h1>AgriDirect</h1>
+                <span>Direct Farmer Mandi</span>
+              </div>
+            </button>
 
-// ---- chat ----
-function curOrderId(){const v=$('chatOrder').value||'';return v.split(' ')[0]}
-function renderChat(){
-  renderOrdersLite();
-  const id=curOrderId(); const arr=chats[id]||[];
-  const mine=$('myLang').value||'en';
-  $('chatBox').innerHTML=arr.map(m=>{const tr=fakeTranslate(m.text,mine);return `<div class="msg ${m.me?'me':'them'}">${m.text}<span class="trans">🌐 ${tr} • ${m.lang}→${mine}</span></div>`}).join('')||'<p class="muted">Say hello. Type in Kannada, Hindi, Malayalam or English.</p>';
-  $('chatBox').scrollTop=9999;
-}
-function renderOrdersLite(){const sel=$('chatOrder');const cur=sel.value;sel.innerHTML=orders.map(o=>`<option>${o.id} • ${o.crop} • ${o.status}</option>`).join('');if(cur)sel.value=cur}
-function sendChat(){
-  const id=curOrderId(); if(!id)return toast('No order yet — place one first');
-  const v=$('chatIn').value.trim(); if(!v)return;
-  const mine=$('myLang').value||detectLang(v);
-  (chats[id]=chats[id]||[]).push({me:true,text:v,lang:mine});
-  // fake farmer auto-reply in Kannada
-  setTimeout(()=>{(chats[id]=chats[id]||[]).push({me:false,text:demoReply(),lang:'kn'});save();renderChat()},700);
-  $('chatIn').value='';save();renderChat();
-}
-function demoReply(){const r=['ಸರಿ, ನಾಳೆ ಬೆಳಿಗ್ಗೆ ವಿತರಣೆ ಮಾಡುತ್ತೇನೆ 🌾','ಬೆಲೆ ಸರಿ, 50 ಕೆಜಿ ರೆಡಿ ಇದೆ','ನಮಸ್ಕಾರ, ಟೊಮೆಟೊ ತಾಜಾ ಇದೆ 🍅'];return r[Math.floor(Math.random()*r.length)]}
-function voiceDemo(){$('chatIn').value='ಟೊಮೆಟೊ ಬೆಲೆ ಎಷ್ಟು?';toast('🎤 Voice typed in Kannada (demo)');sendChat()}
+            <nav class="nav-links">
+              <button class="nav-btn ${currentRoute === 'produce-marketplace' ? 'active' : ''}" data-route="produce-marketplace">Marketplace</button>
+              <button class="nav-btn ${currentRoute === 'price-index-&-savings' ? 'active' : ''}" data-route="price-index-&-savings">Price Index & Savings</button>
+              <button class="nav-btn ${currentRoute === 'farmer-selling-portal' ? 'active' : ''}" data-route="farmer-selling-portal">For Farmers</button>
+              <button class="nav-btn ${currentRoute === 'shopkeeper-procurement' ? 'active' : ''}" data-route="shopkeeper-procurement">For Shopkeepers</button>
+              <button class="nav-btn ${currentRoute === 'orders-&-escrow' ? 'active' : ''}" data-route="orders-&-escrow">Orders & Escrow</button>
+            </nav>
 
-function renderAll(){drawBoard();renderMine();renderShop();applyI();syncAuth();
-  if(!$('f_date').value)$('f_date').valueAsDate=new Date();
-  $('loginBtn').onclick=()=>show('view-auth'); $('logoutBtn').onclick=logout;
-}
-document.querySelectorAll('#langs button').forEach(b=>b.onclick=()=>setLang(b.dataset.lang));
-$('myLang').onchange=renderChat; $('chatOrder').onchange=renderChat;
-setLang(LANG); renderAll(); show('view-landing');
-// ponytail: single-file demo logic, no framework. Add Bhashini/Google API + backend when pilot goes live.
+            <div class="header-actions">
+              <button class="btn-secondary" id="btn-list-harvest">
+                <span class="material-symbols-outlined">add</span> List Harvest
+              </button>
+              <button class="btn-outline" id="btn-toggle-persona">
+                <span class="material-symbols-outlined">${persona === 'shopkeeper' ? 'storefront' : 'agriculture'}</span>
+                <span style="text-transform: capitalize;">${persona}</span>
+              </button>
+              <img src="${USER_AVATAR}" class="avatar-pill" alt="User" />
+            </div>
+          </div>
+        </header>
+
+        <!-- Screen Navigator -->
+        <div class="screen-navigator">
+          <div class="navigator-inner">
+            <span class="nav-tag">Screens:</span>
+            <button class="pill-btn ${currentRoute === 'produce-marketplace' ? 'active' : ''}" data-route="produce-marketplace">1 & 2. Marketplace</button>
+            <button class="pill-btn ${currentRoute === 'price-index-&-savings' ? 'active' : ''}" data-route="price-index-&-savings">3 & 5. Mandi Index & Savings</button>
+            <button class="pill-btn ${currentRoute === 'farmer-selling-portal' ? 'active' : ''}" data-route="farmer-selling-portal">4 & 6. Farmer Portal</button>
+            <button class="pill-btn ${currentRoute === 'shopkeeper-procurement' ? 'active' : ''}" data-route="shopkeeper-procurement">7. Procurement Hub</button>
+            <button class="pill-btn ${currentRoute === 'orders-&-escrow' ? 'active' : ''}" data-route="orders-&-escrow">8. Orders & Escrow</button>
+          </div>
+        </div>
+
+        <!-- Main View Router -->
+        <main class="main-content" id="main-view-container"></main>
+
+        <!-- Footer -->
+        <footer class="footer">
+          <div class="footer-inner">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <img src="${BRAND_LOGO}" style="height: 20px; border-radius: 4px;" alt="Logo" />
+              <strong>AgriDirect B2B Exchange</strong> — Disintermediating APMC middleman commissions with institutional escrow.
+            </div>
+            <div>© 2026 AgriDirect Inc. • All Rights Reserved</div>
+          </div>
+        </footer>
+      </div>
+      <div id="modal-container"></div>
+    `;
+
+    bindHeaderEvents();
+    renderRouteView();
+  }
+
+  function bindHeaderEvents() {
+    document.getElementById('brand-home-btn')?.addEventListener('click', () => {
+      currentRoute = 'produce-marketplace';
+      renderApp();
+    });
+
+    document.querySelectorAll('[data-route]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const route = e.currentTarget.getAttribute('data-route');
+        if (route) {
+          currentRoute = route;
+          renderApp();
+        }
+      });
+    });
+
+    document.getElementById('btn-list-harvest')?.addEventListener('click', () => {
+      openListingModal();
+    });
+
+    document.getElementById('btn-toggle-persona')?.addEventListener('click', () => {
+      persona = persona === 'shopkeeper' ? 'farmer' : 'shopkeeper';
+      renderApp();
+    });
+  }
+
+  function renderRouteView() {
+    const container = document.getElementById('main-view-container');
+    if (!container) return;
+
+    if (currentRoute === 'produce-marketplace') {
+      renderProduceMarketplace(container);
+    } else if (currentRoute === 'price-index-&-savings') {
+      renderPriceIndexSavings(container);
+    } else if (currentRoute === 'farmer-selling-portal') {
+      renderFarmerSellingPortal(container);
+    } else if (currentRoute === 'shopkeeper-procurement') {
+      renderShopkeeperProcurement(container);
+    } else if (currentRoute === 'orders-&-escrow') {
+      renderOrdersEscrow(container);
+    }
+  }
+
+  // --- SCREEN 1 & 2: PRODUCE MARKETPLACE ---
+  function renderProduceMarketplace(container) {
+    container.innerHTML = `
+      <section class="hero-card">
+        <div class="hero-badge"><span class="material-symbols-outlined" style="font-size: 16px;">verified_user</span> Zero APMC Middleman Brokerage • Tripartite Escrow</div>
+        <h2 class="hero-title">Direct Farm-to-Shop Wholesale Exchange</h2>
+        <p class="hero-subtitle">
+          Eliminate traditional arthiya commission cuts. Kirana grocers save 24–36% while sovereign producers gain +39% higher net payouts upon Door QC confirmation.
+        </p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <button class="btn-secondary" id="hero-scroll-btn"><span class="material-symbols-outlined">shopping_cart</span> Explore Active Harvest Lots</button>
+          <button class="btn-outline" style="color: #fff; background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3);" id="hero-list-btn"><span class="material-symbols-outlined">add_circle</span> List Farmgate Harvest</button>
+        </div>
+        <div class="hero-stats-grid">
+          <div class="hero-stat">
+            <span class="hero-stat-label">Aggregated Weekly Savings</span>
+            <span class="hero-stat-value">₹4.82 Crore</span>
+            <span class="hero-stat-desc">Bypassed from APMC cuts</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-label">Avg. Farmgate Transit</span>
+            <span class="hero-stat-value" style="color: #fff;">4.8 Hours</span>
+            <span class="hero-stat-desc">Harvest to shop unloading</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-label">Cold-Chain Spoilage</span>
+            <span class="hero-stat-value">&lt; 0.8%</span>
+            <span class="hero-stat-desc">vs 18% APMC mandi rot</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-label">Direct Settlement</span>
+            <span class="hero-stat-value" style="color: #fff;">&lt; 2 Hours</span>
+            <span class="hero-stat-desc">Instant IMPS bank payout</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="catalog-section">
+        <div class="section-header">
+          <div>
+            <h3 class="section-title">Verified Farmgate Harvest Lots</h3>
+            <p class="section-subtitle">Real-time availability from sorted clusters. 1-click escrow lock & cold transit dispatch.</p>
+          </div>
+        </div>
+
+        <div class="cards-grid">
+          ${harvestLots.map(lot => `
+            <div class="produce-card">
+              <div>
+                <div class="card-img-wrapper">
+                  <img src="${lot.imageUrl}" alt="${lot.commodity}" />
+                  <div class="badge-float">
+                    <span class="badge-lot">${lot.lotNumber}</span>
+                    <span class="badge-grade">${lot.grade}</span>
+                  </div>
+                  ${lot.coldChainReady ? `<div class="badge-reefer"><span class="material-symbols-outlined" style="font-size: 13px;">ac_unit</span> Reefer Ready</div>` : ''}
+                </div>
+                <div class="card-body">
+                  <div>
+                    <h4 class="card-commodity">${lot.commodity}</h4>
+                    <p class="card-origin">${lot.variety} • <strong>${lot.location}</strong> (${lot.distanceKm} km)</p>
+                  </div>
+                  <div class="rate-box">
+                    <div>
+                      <div class="rate-direct">${lot.directRateFormatted}</div>
+                      <div class="rate-mandi">Mandi: ${lot.mandiRateFormatted}</div>
+                    </div>
+                    <div style="text-align: right;">
+                      <span class="rate-savings">Save ${lot.savingsPct}%</span>
+                      <div style="font-size: 10px; color: var(--on-surface-variant); margin-top: 4px;">Qty: ${lot.availableQuantity} ${lot.quantityUnit}</div>
+                    </div>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--on-surface-variant);">
+                    <span>Producer: <strong>${lot.producerName}</strong></span>
+                    <span style="color: var(--secondary); font-weight: 700;">★ ${lot.fulfillmentRate}% Fill</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-actions">
+                <button class="btn-secondary" style="flex: 1;" onclick="window.agriDirect.openOrderModal('${lot.id}')">
+                  <span class="material-symbols-outlined">lock_clock</span> Direct Escrow Lock
+                </button>
+                <button class="btn-outline" style="padding: 8px 10px;" title="View Assay" onclick="window.agriDirect.openAssayModal('${lot.lotNumber}')">
+                  <span class="material-symbols-outlined">verified</span>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </section>
+    `;
+
+    document.getElementById('hero-scroll-btn')?.addEventListener('click', () => {
+      document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+    });
+    document.getElementById('hero-list-btn')?.addEventListener('click', () => {
+      openListingModal();
+    });
+  }
+
+  // --- SCREEN 3 & 5: PRICE INDEX & SAVINGS SIMULATOR ---
+  function renderPriceIndexSavings(container) {
+    const totalDirect = Math.round(simVolume * selectedSimCrop.directRate * 100);
+    const totalMandi = Math.round(simVolume * selectedSimCrop.mandiRate * 100);
+    const middlemanBypassed = totalMandi - totalDirect;
+    const farmerBonus = Math.round(simVolume * (selectedSimCrop.farmerPayout - (selectedSimCrop.mandiRate * 0.6)) * 100);
+
+    container.innerHTML = `
+      <section style="background: #fff; border-radius: var(--radius-xl); border: 1px solid var(--outline-variant); padding: 32px; box-shadow: var(--shadow-sm);">
+        <div class="section-header" style="border-bottom: 1px solid var(--outline-variant); padding-bottom: 16px;">
+          <div>
+            <h2 class="section-title" style="display: flex; align-items: center; gap: 8px;">
+              <span class="material-symbols-outlined" style="color: var(--secondary); font-size: 28px;">query_stats</span>
+              Mandi Price Index & Disintermediation Simulator
+            </h2>
+            <p class="section-subtitle">Real-time mathematical audit of traditional APMC middleman cuts vs AgriDirect farmgate bypass.</p>
+          </div>
+          <button class="btn-outline" onclick="alert('APMC Disintermediation Audit Report (PDF, ₹4.82 Cr savings) prepared for download.');">
+            <span class="material-symbols-outlined">download</span> Download Audit PDF
+          </button>
+        </div>
+
+        <!-- Crop Selector Tabs -->
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0;">
+          ${COMMODITIES.map(c => `
+            <button class="pill-btn ${selectedSimCrop.id === c.id ? 'active' : ''}" style="padding: 8px 14px; font-size: 12px; display: flex; align-items: center; gap: 6px;" onclick="window.agriDirect.selectCrop('${c.id}')">
+              <span class="material-symbols-outlined" style="font-size: 16px;">${c.icon}</span> ${c.name}
+            </button>
+          `).join('')}
+        </div>
+
+        <!-- Interactive Volume Slider -->
+        <div style="background: var(--surface-container); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--outline-variant); margin-bottom: 28px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+            <label style="font-size: 12px; font-weight: 800; text-transform: uppercase;">
+              Procurement Volume: <strong style="font-size: 16px; color: var(--on-surface);">${simVolume} Quintals</strong> (${simVolume * 100} kg)
+            </label>
+            <span style="font-size: 12px; font-weight: 800; color: var(--secondary);">Save ${selectedSimCrop.savingsPct}% Direct</span>
+          </div>
+          <input type="range" min="5" max="150" value="${simVolume}" id="sim-volume-range" style="width: 100%; accent-color: var(--secondary); cursor: pointer;" />
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--on-surface-variant); margin-top: 6px;">
+            <span>Min: 5 Q (500 kg)</span>
+            <span>Kirana Avg: 30 Q (3 MT)</span>
+            <span>Full Truckload: 150 Q (15 MT)</span>
+          </div>
+        </div>
+
+        <!-- Side-by-Side Comparison -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+          <!-- Traditional Mandi -->
+          <div style="background: rgba(186, 26, 26, 0.04); border: 1px solid rgba(186, 26, 26, 0.2); border-radius: var(--radius-lg); padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <strong style="color: var(--error); font-size: 16px;">Traditional APMC Mandi</strong>
+              <span style="background: rgba(186, 26, 26, 0.15); color: var(--error); font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">Multi-Tier Cuts</span>
+            </div>
+            <div style="font-size: 32px; font-weight: 900; color: var(--on-surface);">₹${totalMandi.toLocaleString()}</div>
+            <div style="font-size: 12px; color: var(--on-surface-variant); margin-bottom: 16px;">Rate: ₹${selectedSimCrop.mandiRate}/kg</div>
+            <div style="font-size: 12px; border-top: 1px solid rgba(186, 26, 26, 0.2); padding-top: 12px; display: flex; flex-direction: column; gap: 6px; color: var(--on-surface-variant);">
+              <div style="display: flex; justify-content: space-between;"><span>Arthiya Commission (8.5%):</span><strong style="color: var(--error);">+₹${Math.round(totalMandi * 0.085).toLocaleString()}</strong></div>
+              <div style="display: flex; justify-content: space-between;"><span>Mandi Cess & Market Tax (3.2%):</span><strong style="color: var(--error);">+₹${Math.round(totalMandi * 0.032).toLocaleString()}</strong></div>
+              <div style="display: flex; justify-content: space-between;"><span>Hamali Loading/Unloading:</span><strong style="color: var(--error);">+₹${Math.round(simVolume * 45).toLocaleString()}</strong></div>
+              <div style="display: flex; justify-content: space-between;"><span>Transit Spoilage & Shrinkage:</span><strong style="color: var(--error);">~12% Uninsured</strong></div>
+            </div>
+          </div>
+
+          <!-- AgriDirect Direct -->
+          <div style="background: rgba(0, 110, 47, 0.08); border: 1px solid rgba(0, 110, 47, 0.3); border-radius: var(--radius-lg); padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <strong style="color: var(--secondary); font-size: 16px;">AgriDirect Farmgate Direct</strong>
+              <span style="background: rgba(0, 110, 47, 0.2); color: var(--secondary); font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">0% Brokerage</span>
+            </div>
+            <div style="font-size: 32px; font-weight: 900; color: var(--secondary);">₹${totalDirect.toLocaleString()}</div>
+            <div style="font-size: 12px; color: var(--on-surface-variant); margin-bottom: 16px;">Rate: ₹${selectedSimCrop.directRate}/kg</div>
+            <div style="font-size: 12px; border-top: 1px solid rgba(0, 110, 47, 0.2); padding-top: 12px; display: flex; flex-direction: column; gap: 6px;">
+              <div style="display: flex; justify-content: space-between; font-weight: 800; color: var(--secondary);"><span>Middleman Cut Bypassed:</span><span>Save ₹${middlemanBypassed.toLocaleString()}</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Farmer Direct Bonus:</span><strong style="color: var(--secondary);">+₹${farmerBonus.toLocaleString()} higher pay</strong></div>
+              <div style="display: flex; justify-content: space-between;"><span>Reefer Cold Transit:</span><strong style="color: var(--secondary);">Included (&lt;0.8% rot)</strong></div>
+              <div style="display: flex; justify-content: space-between;"><span>Protocol Escrow Fee:</span><strong>Fixed 2.0% Tripartite</strong></div>
+            </div>
+            <button class="btn-secondary" style="width: 100%; margin-top: 18px; justify-content: center; padding: 12px;" onclick="window.agriDirect.goToCatalog()">
+              <span class="material-symbols-outlined">lock_clock</span> Lock ${selectedSimCrop.name} at ₹${selectedSimCrop.directRate}/kg
+            </button>
+          </div>
+        </div>
+      </section>
+    `;
+
+    document.getElementById('sim-volume-range')?.addEventListener('input', e => {
+      simVolume = Number(e.target.value);
+      renderRouteView();
+    });
+  }
+
+  // --- SCREEN 4 & 6: FARMER SELLING PORTAL ---
+  function renderFarmerSellingPortal(container) {
+    container.innerHTML = `
+      <section style="background: #fff; border-radius: var(--radius-xl); border: 1px solid var(--outline-variant); padding: 32px; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid var(--outline-variant); padding-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 60px; height: 60px; border-radius: var(--radius-md); background: rgba(0, 110, 47, 0.12); color: var(--secondary); display: flex; align-items: center; justify-content: center; font-size: 28px;">
+              <span class="material-symbols-outlined" style="font-size: 32px;">agriculture</span>
+            </div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h2 style="font-size: 22px; font-weight: 900;">Rajesh Patil</h2>
+                <span class="badge-grade">Verified Sovereign Producer</span>
+              </div>
+              <p style="font-size: 12px; color: var(--on-surface-variant); margin-top: 2px;">Satana Farm Cluster, Nashik • 22 Acres Red Onion & Pomegranate • Sovereign ID #AG-PATIL-9912</p>
+            </div>
+          </div>
+          <div style="background: var(--surface-container); padding: 10px 16px; border-radius: var(--radius-md); text-align: right;">
+            <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--on-surface-variant);">Net Earnings Gain</div>
+            <div style="font-size: 20px; font-weight: 900; color: var(--secondary);">+39.4% Net</div>
+            <div style="font-size: 10px; font-weight: 700; color: var(--secondary);">+₹1,42,800 vs Mandi Drafts</div>
+          </div>
+        </div>
+
+        <!-- 2-Min Listing CTA Banner -->
+        <div style="background: linear-gradient(90deg, rgba(0, 110, 47, 0.12), rgba(0, 59, 27, 0.08)); border: 1px solid rgba(0, 110, 47, 0.3); border-radius: var(--radius-lg); padding: 20px; margin: 24px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 style="font-size: 16px; font-weight: 900;">Have fresh harvest ready at your farmgate?</h3>
+            <p style="font-size: 12px; color: var(--on-surface-variant); margin-top: 2px;">Broadcast harvest lot directly to 450+ verified grocers in Mumbai & Pune with zero broker deductions.</p>
+          </div>
+          <button class="btn-secondary" onclick="window.agriDirect.openListingModal()">
+            <span class="material-symbols-outlined">add_box</span> Create 2-Min Harvest Listing
+          </button>
+        </div>
+
+        <!-- Active Lots Queue -->
+        <h4 style="font-size: 13px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px;">Your Active Exchange Lots</h4>
+        <div style="background: var(--surface-container); border: 1px solid var(--outline-variant); border-radius: var(--radius-md); padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="background: rgba(0, 110, 47, 0.2); color: var(--secondary); font-weight: 900; padding: 6px 12px; border-radius: 8px;">40 Q</span>
+            <div>
+              <strong style="font-size: 14px;">Nashik Red Onions (Export Garwa)</strong>
+              <div style="font-size: 11px; color: var(--on-surface-variant);">Escrow Locked: ₹1,14,000 by Apna Bazar & FreshMart</div>
+            </div>
+          </div>
+          <span style="background: rgba(82, 99, 80, 0.15); color: var(--tertiary); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px;">
+            Reefer Transit Dispatched (04:30 AM Drop)
+          </span>
+        </div>
+      </section>
+    `;
+  }
+
+  // --- SCREEN 7: SHOPKEEPER PROCUREMENT HUB ---
+  function renderShopkeeperProcurement(container) {
+    const replenishmentList = [
+      { name: 'Nashik Red Onions (Garwa)', qty: 15, unit: 'Quintals', rate: 34, mandi: 48.5 },
+      { name: 'Hybrid Crimson Roma Tomatoes', qty: 20, unit: 'Crates', rate: 28, mandi: 44.0 },
+      { name: 'Kufri Jyoti Potatoes', qty: 10, unit: 'Bags', rate: 23.5, mandi: 34.0 },
+      { name: 'Nagpur Mandarin Oranges', qty: 8, unit: 'Crates', rate: 46, mandi: 68.0 }
+    ];
+
+    container.innerHTML = `
+      <section style="background: #fff; border-radius: var(--radius-xl); border: 1px solid var(--outline-variant); padding: 32px; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid var(--outline-variant); padding-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 60px; height: 60px; border-radius: var(--radius-md); background: rgba(0, 110, 47, 0.12); color: var(--secondary); display: flex; align-items: center; justify-content: center; font-size: 28px;">
+              <span class="material-symbols-outlined" style="font-size: 32px;">storefront</span>
+            </div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h2 style="font-size: 22px; font-weight: 900;">Patel Fresh Mart</h2>
+                <span class="badge-grade">Store #12 Dadar East</span>
+              </div>
+              <p style="font-size: 12px; color: var(--on-surface-variant); margin-top: 2px;">Direct Farmgate Dock: Bay 4 (04:30 AM Daily) • MTD Bypass Savings: <strong style="color: var(--secondary);">₹1,18,450</strong></p>
+            </div>
+          </div>
+          <div style="background: var(--surface-container); padding: 10px 16px; border-radius: var(--radius-md); text-align: right;">
+            <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--on-surface-variant);">AgriPay Net-15 Line</div>
+            <div style="font-size: 18px; font-weight: 900; color: var(--secondary);">₹1,65,800 Available</div>
+            <div style="font-size: 10px; color: var(--on-surface-variant);">0% APR (15-Day Auto-Revolve)</div>
+          </div>
+        </div>
+
+        <!-- Morning Replenishment Planner -->
+        <div style="margin: 24px 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+              <h3 style="font-size: 18px; font-weight: 900;">Morning Replenishment Planner</h3>
+              <p style="font-size: 12px; color: var(--on-surface-variant);">Direct farmgate batch ordering with 04:30 AM storefront arrival.</p>
+            </div>
+            <button class="btn-secondary" onclick="window.agriDirect.lockBatchOrder()">
+              <span class="material-symbols-outlined">lock_clock</span> 1-Click Batch Escrow Lock
+            </button>
+          </div>
+
+          <div style="background: var(--surface-container); border: 1px solid var(--outline-variant); border-radius: var(--radius-lg); padding: 16px;">
+            ${replenishmentList.map(item => `
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--outline-variant);">
+                <div>
+                  <strong style="font-size: 14px;">${item.name}</strong>
+                  <div style="font-size: 11px; color: var(--on-surface-variant);">Direct: <strong style="color: var(--secondary);">₹${item.rate}/kg</strong> • APMC Mandi: <span style="text-decoration: line-through;">₹${item.mandi}/kg</span></div>
+                </div>
+                <div style="text-align: right;">
+                  <strong style="font-size: 13px;">${item.qty} ${item.unit}</strong>
+                  <div style="font-size: 12px; font-weight: 900; color: var(--secondary);">₹${(item.qty * item.rate * 100).toLocaleString()}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Cooperative Neighborhood Group Pooling -->
+        <div style="background: rgba(0, 110, 47, 0.08); border: 1px solid rgba(0, 110, 47, 0.3); border-radius: var(--radius-lg); padding: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--secondary);">Cooperative Neighborhood Group Pooling</span>
+            <div style="font-size: 15px; font-weight: 900; margin: 4px 0;">Dadar-Matunga Cluster: 4.85 / 6.0 MT Full-Truck-Load</div>
+            <p style="font-size: 12px; color: var(--on-surface-variant);">Pool with 3 nearby stores to waive ₹850 split-dock fee. Cutoff in 01h 42m.</p>
+          </div>
+          <button class="btn-secondary" onclick="alert('Batch locked into Dadar-Matunga Group Pool. ₹850 split-dock fee waived!');">
+            Lock Into Group Pool (Save ₹850)
+          </button>
+        </div>
+      </section>
+    `;
+  }
+
+  // --- SCREEN 8: ORDERS & ESCROW COMMAND CENTER ---
+  function renderOrdersEscrow(container) {
+    container.innerHTML = `
+      <section style="background: #fff; border-radius: var(--radius-xl); border: 1px solid var(--outline-variant); padding: 32px; box-shadow: var(--shadow-sm);">
+        <div class="section-header" style="border-bottom: 1px solid var(--outline-variant); padding-bottom: 16px;">
+          <div>
+            <h2 class="section-title" style="display: flex; align-items: center; gap: 8px;">
+              <span class="material-symbols-outlined" style="color: var(--secondary); font-size: 28px;">lock_clock</span>
+              Institutional Escrow & Cold Custody Dashboard
+            </h2>
+            <p class="section-subtitle">Tripartite Escrow Protocol #AD-ESCROW-2026. Funds remain held in trust until physical Door QC scan.</p>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 20px;">
+          ${orders.map(order => `
+            <div style="background: var(--surface-container); border: 1px solid var(--outline-variant); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <strong style="font-family: monospace; font-size: 14px;">${order.orderNumber}</strong>
+                    <span class="badge-grade">${order.status}</span>
+                  </div>
+                  <h4 style="font-size: 16px; font-weight: 800; margin-top: 4px;">${order.commodity}</h4>
+                  <div style="font-size: 12px; color: var(--on-surface-variant);">${order.quantityStr} • Producer: <strong>${order.farmerName}</strong> (${order.cluster})</div>
+                </div>
+                <div style="text-align: right;">
+                  <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--on-surface-variant); display: block;">Escrow Locked</span>
+                  <span style="font-size: 22px; font-weight: 900; color: var(--secondary);">₹${order.escrowAmount.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <!-- Telemetry -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; background: rgba(255,255,255,0.7); padding: 12px; border-radius: var(--radius-md); font-size: 11px;">
+                <div><span style="color: var(--on-surface-variant);">CHILLER TEMP:</span> <strong style="color: #006e2f;">${order.chillerTemp}</strong></div>
+                <div><span style="color: var(--on-surface-variant);">TRUCK NO:</span> <strong style="font-family: monospace;">${order.truckNumber}</strong></div>
+                <div><span style="color: var(--on-surface-variant);">ETA:</span> <strong>${order.eta}</strong></div>
+                <div><span style="color: var(--on-surface-variant);">TOKEN:</span> <strong style="font-family: monospace;">${order.tokenHash}</strong></div>
+              </div>
+
+              <!-- Actions -->
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                ${order.status !== 'Delivered & QC Verified' ? `
+                  <button class="btn-secondary" onclick="window.agriDirect.openQCModal('${order.id}')">
+                    <span class="material-symbols-outlined">qr_code_scanner</span> Door QC Scan & Release Escrow
+                  </button>
+                ` : `
+                  <span style="background: rgba(0, 110, 47, 0.12); color: var(--secondary); font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: var(--radius-md); display: inline-flex; align-items: center; gap: 6px;">
+                    <span class="material-symbols-outlined">payments</span> Released (UTR: ${order.utrNumber})
+                  </span>
+                `}
+                <button class="btn-outline" onclick="window.agriDirect.openAssayModal('${order.lotNumber}')">
+                  <span class="material-symbols-outlined">verified</span> View Lab Assay
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </section>
+    `;
+  }
+
+  // --- MODALS ---
+  function openOrderModal(lotId) {
+    const lot = harvestLots.find(l => l.id === lotId) || harvestLots[0];
+    const total = Math.round(10 * lot.directRateNum * (lot.quantityUnit === 'Quintals' ? 100 : 25));
+
+    showModal(`
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div class="modal-title"><span class="material-symbols-outlined" style="color: var(--secondary);">lock_clock</span> Lock Tripartite Escrow</div>
+          <button class="close-btn" onclick="window.agriDirect.closeModal()">✕</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; font-size: 12px;">
+          <div style="background: var(--surface-container); padding: 12px; border-radius: var(--radius-md);">
+            <strong style="font-size: 14px;">${lot.commodity}</strong>
+            <div style="color: var(--on-surface-variant);">${lot.variety} • ${lot.location}</div>
+            <div style="font-size: 16px; font-weight: 900; color: var(--secondary); margin-top: 4px;">${lot.directRateFormatted}</div>
+          </div>
+          <div>
+            <label style="font-weight: 800; text-transform: uppercase;">Quantity (${lot.quantityUnit}):</label>
+            <input type="number" value="10" min="1" id="order-qty-input" style="width: 100%; padding: 10px; margin-top: 4px; border-radius: 8px; border: 1px solid var(--outline-variant); font-weight: bold;" />
+          </div>
+          <div style="background: rgba(0, 110, 47, 0.1); padding: 12px; border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
+            <strong>Escrow Deposit:</strong>
+            <span style="font-size: 18px; font-weight: 900; color: var(--secondary);" id="order-total-preview">₹${total.toLocaleString()}</span>
+          </div>
+          <button class="btn-secondary" style="width: 100%; justify-content: center; padding: 12px;" onclick="window.agriDirect.confirmOrder('${lot.id}')">
+            <span class="material-symbols-outlined">lock</span> Confirm & Lock Escrow
+          </button>
+        </div>
+      </div>
+    `);
+
+    document.getElementById('order-qty-input')?.addEventListener('input', e => {
+      const q = Number(e.target.value) || 1;
+      const t = Math.round(q * lot.directRateNum * (lot.quantityUnit === 'Quintals' ? 100 : 25));
+      const el = document.getElementById('order-total-preview');
+      if (el) el.innerText = '₹' + t.toLocaleString();
+    });
+  }
+
+  function openQCModal(orderId) {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    showModal(`
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div class="modal-title"><span class="material-symbols-outlined" style="color: var(--secondary);">qr_code_scanner</span> Door QC Scan & Release</div>
+          <button class="close-btn" onclick="window.agriDirect.closeModal()">✕</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px; font-size: 12px;">
+          <div style="background: var(--surface-container); padding: 12px; border-radius: var(--radius-md);">
+            <div style="display: flex; justify-content: space-between;"><strong>${order.commodity}</strong><span style="font-weight: 900; color: var(--secondary);">₹${order.escrowAmount.toLocaleString()}</span></div>
+            <div style="color: var(--on-surface-variant); margin-top: 4px;">Truck: ${order.truckNumber} • Driver: ${order.driverName}</div>
+          </div>
+          <div style="background: rgba(0, 110, 47, 0.08); padding: 10px; border-radius: 8px; color: var(--secondary); font-weight: 600;">
+            ✓ Tare weighbridge verified • Temperature 4.2°C maintained • 0% transit rot.
+          </div>
+          <button class="btn-secondary" style="width: 100%; justify-content: center; padding: 12px;" onclick="window.agriDirect.confirmRelease('${order.id}')">
+            <span class="material-symbols-outlined">payments</span> Approve & Release ₹${order.escrowAmount.toLocaleString()} to Farmer
+          </button>
+        </div>
+      </div>
+    `);
+  }
+
+  function openAssayModal(lotNumber) {
+    showModal(`
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div class="modal-title"><span class="material-symbols-outlined" style="color: var(--secondary);">verified</span> NABL Quality Assay Sheet</div>
+          <button class="close-btn" onclick="window.agriDirect.closeModal()">✕</button>
+        </div>
+        <div style="font-size: 12px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; justify-content: space-between; font-family: monospace;">
+            <strong>${lotNumber}</strong>
+            <span style="color: var(--secondary); font-weight: 800;">AGMARK GRADE A+</span>
+          </div>
+          <table class="assay-table">
+            <thead><tr><th>Parameter</th><th>Lab Measured</th><th>Standard</th></tr></thead>
+            <tbody>
+              <tr><td>Moisture Content</td><td style="color: var(--secondary); font-weight: bold;">9.4%</td><td>Max 12.0%</td></tr>
+              <tr><td>Size Uniformity</td><td style="color: var(--secondary); font-weight: bold;">50-65mm (96.4%)</td><td>Min 80%</td></tr>
+              <tr><td>Brix Sugar Index</td><td style="color: var(--secondary); font-weight: bold;">11.8° Brix</td><td>Min 9.0°</td></tr>
+              <tr><td>Pesticide Residue</td><td style="color: var(--secondary); font-weight: bold;">0.00 ppm</td><td>FSSAI MRL</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size: 11px; color: var(--on-surface-variant);">Certified by NABL Testing Node #4 • Cryptographically signed on AgriDirect ledger.</p>
+          <button class="btn-outline" style="width: 100%; justify-content: center;" onclick="window.agriDirect.closeModal()">Close</button>
+        </div>
+      </div>
+    `);
+  }
+
+  function openListingModal() {
+    showModal(`
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div class="modal-title"><span class="material-symbols-outlined" style="color: var(--secondary);">add_box</span> 2-Min Harvest Listing</div>
+          <button class="close-btn" onclick="window.agriDirect.closeModal()">✕</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; font-size: 12px;">
+          <div>
+            <label style="font-weight: 800; text-transform: uppercase;">Commodity:</label>
+            <input type="text" id="listing-crop-name" value="Nashik Red Onions" style="width: 100%; padding: 8px; margin-top: 4px; border-radius: 8px; border: 1px solid var(--outline-variant); font-weight: bold;" />
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label style="font-weight: 800; text-transform: uppercase;">Quantity (Quintals):</label>
+              <input type="number" id="listing-qty" value="25" min="1" style="width: 100%; padding: 8px; margin-top: 4px; border-radius: 8px; border: 1px solid var(--outline-variant); font-weight: bold;" />
+            </div>
+            <div>
+              <label style="font-weight: 800; text-transform: uppercase;">Target Rate (₹/kg):</label>
+              <input type="number" id="listing-rate" value="32" min="1" style="width: 100%; padding: 8px; margin-top: 4px; border-radius: 8px; border: 1px solid var(--outline-variant); font-weight: bold;" />
+            </div>
+          </div>
+          <button class="btn-secondary" style="width: 100%; justify-content: center; padding: 12px;" onclick="window.agriDirect.submitListing()">
+            <span class="material-symbols-outlined">publish</span> Broadcast to Retail Network
+          </button>
+        </div>
+      </div>
+    `);
+  }
+
+  function showModal(contentHtml) {
+    const container = document.getElementById('modal-container');
+    if (!container) return;
+    container.innerHTML = `<div class="modal-overlay">${contentHtml}</div>`;
+  }
+
+  function closeModal() {
+    const container = document.getElementById('modal-container');
+    if (container) container.innerHTML = '';
+  }
+
+  // --- GLOBAL CONTROLLER API ---
+  window.agriDirect = {
+    openOrderModal,
+    openQCModal,
+    openAssayModal,
+    openListingModal,
+    closeModal,
+    selectCrop: function(cropId) {
+      selectedSimCrop = COMMODITIES.find(c => c.id === cropId) || COMMODITIES[0];
+      renderRouteView();
+    },
+    goToCatalog: function() {
+      currentRoute = 'produce-marketplace';
+      renderApp();
+    },
+    confirmOrder: function(lotId) {
+      const lot = harvestLots.find(l => l.id === lotId) || harvestLots[0];
+      const newOrder = {
+        id: 'ord-' + Date.now(),
+        orderNumber: '#ORD-' + Math.floor(Math.random() * 8999 + 1000),
+        lotNumber: lot.lotNumber,
+        commodity: lot.commodity,
+        quantityStr: '10 ' + lot.quantityUnit,
+        farmerName: lot.producerName,
+        cluster: lot.location,
+        escrowAmount: Math.round(10 * lot.directRateNum * (lot.quantityUnit === 'Quintals' ? 100 : 25)),
+        status: 'In Cold Transit',
+        chillerTemp: '4.2°C (Optimal)',
+        truckNumber: 'MH-04-TR-8812',
+        eta: '04:30 AM Drop',
+        driverName: 'Santosh Yadav',
+        tokenHash: '0x' + Math.random().toString(16).substring(2, 8).toUpperCase()
+      };
+      orders.unshift(newOrder);
+      closeModal();
+      currentRoute = 'orders-&-escrow';
+      renderApp();
+      alert(`Escrow Locked! ₹${newOrder.escrowAmount.toLocaleString()} secured. Dispatched via reefer.`);
+    },
+    confirmRelease: function(orderId) {
+      orders = orders.map(o => {
+        if (o.id === orderId) {
+          return {
+            ...o,
+            status: 'Delivered & QC Verified',
+            utrNumber: 'HDFC' + Math.floor(Math.random() * 89999999 + 10000000)
+          };
+        }
+        return o;
+      });
+      closeModal();
+      renderRouteView();
+      alert('Payment Released to Farmer via IMPS! UTR token generated.');
+    },
+    submitListing: function() {
+      const name = document.getElementById('listing-crop-name')?.value || 'Nashik Red Onions';
+      const qty = Number(document.getElementById('listing-qty')?.value) || 25;
+      const rate = Number(document.getElementById('listing-rate')?.value) || 32;
+
+      const newLot = {
+        id: 'lot-' + Date.now(),
+        lotNumber: 'LOT #AG-' + Math.floor(Math.random() * 8999 + 1000),
+        commodity: name,
+        variety: 'Freshly Harvested',
+        grade: 'GRADE A AGMARK',
+        producerName: 'Rajesh Patil',
+        location: 'Satana Hub, Nashik',
+        distanceKm: 42,
+        availableQuantity: qty,
+        quantityUnit: 'Quintals',
+        directRateNum: rate,
+        mandiRateFormatted: `₹${(rate * 1.35).toFixed(1)}/kg`,
+        directRateFormatted: `₹${rate}/kg`,
+        savingsPct: 26,
+        fulfillmentRate: 100,
+        imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDTXm-Z7Nknc-7gO_vN-v5h4UvP-y8UuD5hP2-H1C42lXzZ7YfN1e7Dk4X1X3yqP1p7V9bUq4oGv9G3iZ1tYp_Jk_1Ww_1L=w800',
+        coldChainReady: true
+      };
+
+      harvestLots.unshift(newLot);
+      closeModal();
+      currentRoute = 'produce-marketplace';
+      renderApp();
+      alert(`Harvest Broadcasted! ${name} (${qty} Q) is now live on the exchange.`);
+    },
+    lockBatchOrder: function() {
+      const newOrder = {
+        id: 'ord-' + Date.now(),
+        orderNumber: '#ORD-' + Math.floor(Math.random() * 8999 + 1000),
+        lotNumber: '#LOT-BATCH-MORNING',
+        commodity: 'Morning Replenishment Batch (4 Produce Lines)',
+        quantityStr: '4.85 MT Consolidated',
+        farmerName: 'Satana & Kolar Clusters',
+        cluster: 'Consolidated Reefer Cargo',
+        escrowAmount: 142000,
+        status: 'In Cold Transit',
+        chillerTemp: '4.2°C (Optimal)',
+        truckNumber: 'MH-04-TR-8812',
+        eta: '04:30 AM Drop',
+        driverName: 'Santosh Yadav',
+        tokenHash: '0x' + Math.random().toString(16).substring(2, 8).toUpperCase()
+      };
+      orders.unshift(newOrder);
+      currentRoute = 'orders-&-escrow';
+      renderApp();
+      alert('Batch Escrow Locked (₹1,42,000)! Charged to AgriPay Net-15 Line. Reefer en route.');
+    }
+  };
+
+  // Initial Run on DOM Ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderApp);
+  } else {
+    renderApp();
+  }
+})();
