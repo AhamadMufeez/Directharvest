@@ -46,7 +46,7 @@ body{
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 input,select,textarea{width:100%;padding:11px 12px;border-radius:12px;border:1px solid #c6d8cc;background:rgba(255,255,255,.85);font-size:15px}
 label{font-size:13px;font-weight:700;color:#2c4a37}
-.listing{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;padding:12px;border-radius:16px;background:rgba(255,255,255,.6);border:1px solid rgba(0,0,0,.06);margin-bottom:10px}
+.listing{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;padding:12px;border-radius:16px;background:rgba(255,255,255,.6);border:1px solid rgba(0,0,0,.06);margin-bottom:12px}
 .emoji{width:64px;height:64px;border-radius:16px;display:grid;place-items:center;font-size:34px;background:#eef7f0}
 .badge{font-size:12px;background:#e8f5ec;border:1px solid #bfe0c8;color:var(--green);padding:3px 9px;border-radius:999px;font-weight:700}
 .price{font-size:20px;font-weight:800}
