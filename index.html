@@ -1,135 +1,18 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DirectHarvest — Farmer ↔ Shopkeeper Demo</title>
-<link rel="stylesheet" href="styles.css">
-</head>
-<body>
-<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
-<div class="wrap">
-  <div class="glass topbar">
-    <div class="brand"><div class="logo">🌾</div>
-      <div><h1>DirectHarvest</h1><small data-i="tagline">Fair price. Direct deal. No middleman.</small></div>
-    </div>
-    <div class="row">
-      <div class="langs" id="langs">
-        <button data-lang="en">English</button>
-        <button data-lang="kn">ಕನ್ನಡ</button>
-        <button data-lang="hi">हिन्दी</button>
-        <button data-lang="ml">മലയാളം</button>
-      </div>
-      <button class="btn btn-ghost btn-sm" id="loginBtn">👤 <span data-i="login">Login</span></button>
-      <button class="btn btn-ghost btn-sm" id="logoutBtn" style="display:none">↩ <span data-i="logout">Logout</span></button>
-    </div>
-  </div>
-
-  <div id="view-landing">
-    <div class="hero">
-      <div class="glass hero-pad">
-        <span class="pill" data-i="pilot">Phase 1 Pilot demo • full clickable prototype</span>
-        <h2 data-i="hero">Farmers list. Shops compare. Deal directly.</h2>
-        <p class="muted" data-i="herosub">Public price board, listings, orders, chat with auto-translation, UPI + delivery mock, ratings. Kannada / Hindi / Malayalam / English.</p>
-        <div class="row">
-          <button class="btn btn-green" onclick="quickLogin('farmer')">🚜 <span data-i="asFarmer">Enter as Farmer</span></button>
-          <button class="btn btn-gold" onclick="quickLogin('shop')">🏪 <span data-i="asShop">Enter as Shopkeeper</span></button>
-          <button class="btn btn-ghost" onclick="show('view-dash')">📊 <span data-i="openDash">Open dashboard</span></button>
-        </div>
-        <p class="muted" style="font-size:13px" data-i="transNote">Chat demo: farmer in Kannada ↔ shop in English auto-translates. Try it in Orders → Chat.</p>
-      </div>
-      <div class="glass card">
-        <h3>📢 <span data-i="priceBoard">Public Price Board</span> <span class="badge">no login</span></h3>
-        <p class="muted" style="font-size:13px" data-i="boardSub">Live avg per crop per region (demo data)</p>
-        <table id="boardTable"><tr><th>🥬</th><th>₹/kg</th><th data-i="trend">Trend</th></tr></table>
-        <canvas id="trendChart" width="400" height="180"></canvas>
-      </div>
-    </div>
-
-    <div class="grid3">
-      <div class="glass card"><h3>🚜 <span data-i="f1t">Farmer posts</span></h3><p class="muted" data-i="f1d">Crop, qty, ₹/kg, harvest date, photo. Sees mandi benchmark before pricing.</p></div>
-      <div class="glass card"><h3>🏪 <span data-i="f2t">Shop compares</span></h3><p class="muted" data-i="f2d">Filter by crop, price, distance, freshness, rating. Side-by-side compare.</p></div>
-      <div class="glass card"><h3>🤝 <span data-i="f3t">Direct deal</span></h3><p class="muted" data-i="f3d">Order → accept/counter → UPI escrow → delivery slot → rating. Fee 2% shown openly.</p></div>
-    </div>
-  </div>
-
-  <div id="view-auth" class="glass card" style="display:none;max-width:520px;margin:0 auto">
-    <h3>👤 <span data-i="login">Login</span> (demo, no OTP)</h3>
-    <label>Role</label><select id="a_role"><option value="farmer">🚜 Farmer / ರೈತ</option><option value="shop">🏪 Shopkeeper / ಅಂಗಡಿ</option><option value="admin">🛡 Admin</option></select><br><br>
-    <label data-i="phone">Phone</label><input id="a_phone" placeholder="98765 43210" value="9876543210"><br><br>
-    <label data-i="name">Name</label><input id="a_name" placeholder="Ravi / Ravi Kumar"><br><br>
-    <label data-i="place">Village / Shop place</label><input id="a_place" placeholder="Mandya / Gandhinagar"><br><br>
-    <div class="row"><button class="btn btn-green" onclick="doLogin()">✅ <span data-i="continue">Continue</span></button>
-    <button class="btn btn-ghost" onclick="show('view-landing')">← <span data-i="back">Back</span></button></div>
-  </div>
-
-  <div id="view-dash" style="display:none">
-    <div class="glass card">
-      <div class="row" style="justify-content:space-between">
-        <div><b id="meLine"></b> <span class="badge" id="roleBadge"></span> <span class="badge">✔ verified (demo)</span></div>
-        <div class="tabs" id="dashTabs"></div>
-      </div>
-    </div><br>
-    <!-- FARMER -->
-    <div id="tab-farmer-listings" class="grid2">
-      <div class="glass card"><h3>➕ <span data-i="newList">New listing</span></h3>
-        <label>🥬 Crop</label><select id="f_crop"><option>Tomato 🍅</option><option>Onion 🧅</option><option>Potato 🥔</option><option>Banana 🍌</option><option>Mango 🥭</option><option>Chilli 🌶</option></select><br><br>
-        <div class="row"><div style="flex:1"><label>⚖ Qty (kg)</label><input id="f_qty" type="number" value="200"></div>
-        <div style="flex:1"><label>₹/kg</label><input id="f_price" type="number" value="22"></div></div><br>
-        <label>📅 Harvest date</label><input id="f_date" type="date"><br><br>
-        <label>📍 Distance (km)</label><input id="f_dist" type="number" value="8"><br><br>
-        <button class="btn btn-green" onclick="addListing()">📤 <span data-i="publish">Publish</span></button>
-        <p class="muted" style="font-size:13px">Mandi benchmark: <b id="benchLine">Tomato ₹18–24/kg</b></p>
-      </div>
-      <div class="glass card"><h3>📦 <span data-i="myList">My listings</span></h3><div id="myListings"></div>
-        <h3>💰 <span data-i="earn">Earnings</span></h3><div id="earnBox" class="fee"></div></div>
-    </div>
-    <!-- SHOP -->
-    <div id="tab-shop-browse" style="display:none">
-      <div class="glass card"><h3>🔎 <span data-i="browse">Browse & compare</span></h3>
-        <div class="row">
-          <input id="s_q" placeholder="🔎 tomato / onion…" style="flex:2" oninput="renderShop()">
-          <input id="s_max" type="number" placeholder="max ₹/kg" style="flex:1" oninput="renderShop()">
-          <select id="s_sort" style="flex:1" onchange="renderShop()"><option value="price">₹ low→high</option><option value="dist">nearest</option><option value="rate">top rated</option></select>
-          <button class="btn btn-ghost btn-sm" onclick="renderShop()">↻</button>
-        </div><br><div id="shopList"></div>
-      </div>
-      <div class="glass card compare-bar"><div><b>⚖ <span data-i="compare">Compare</span>: <span id="cmpN">0</span>/3</b></div>
-        <div class="row"><button class="btn btn-gold btn-sm" onclick="showCompare()">👁 <span data-i="viewCmp">View</span></button><div id="cmpBox" class="row"></div></div></div>
-      <div class="glass card" id="cmpView" style="display:none;margin-top:12px"><h3>⚖ Side-by-side</h3><div id="cmpTable"></div></div>
-    </div>
-    <!-- ORDERS -->
-    <div id="tab-orders" class="glass card" style="display:none">
-      <h3>🧾 <span data-i="orders">Orders</span></h3><div id="orderList"></div>
-    </div>
-    <!-- CHAT -->
-    <div id="tab-chat" class="glass card" style="display:none">
-      <h3>💬 <span data-i="chat">Chat</span> <span class="badge" id="chatInfo">auto-translate ON</span></h3>
-      <div class="row"><select id="chatOrder" style="flex:1"></select>
-        <select id="myLang" style="flex:1"><option value="en">I speak English</option><option value="kn">ನಾನು ಕನ್ನಡ</option><option value="hi">मैं हिन्दी</option><option value="ml">ഞാൻ മലയാളം</option></select></div><br>
-      <div class="chatbox" id="chatBox"></div><br>
-      <div class="row"><input id="chatIn" placeholder="Type… / ಬರೆಯಿರಿ… / लिखें…" style="flex:3">
-      <button class="btn btn-green" onclick="sendChat()">➤</button>
-      <button class="btn btn-ghost btn-sm" onclick="voiceDemo()">🎤</button></div>
-      <p class="muted" style="font-size:12px" data-i="chatHint">Demo translator: common words translate, rest shown with [→lang] tag. In real app plug Google/Bhashini API.</p>
-    </div>
-    <!-- ADMIN / MORE -->
-    <div id="tab-more" style="display:none" class="grid2">
-      <div class="glass card"><h3>💳 Payment (UPI mock) + 🚚 Delivery</h3>
-        <div class="fee" id="feeDemo">Farmer ₹1000 + fee 2% ₹20 + delivery ₹50 = <b>₹1070</b>. Escrow: release on delivery.</div><br>
-        <label>Delivery slot</label><select><option>Today 4–6pm (local transporter)</option><option>Tomorrow 7–9am</option><option>Self pickup</option></select><br><br>
-        <button class="btn btn-green btn-sm" onclick="toast('UPI collect sent (demo) ✅')">📲 Pay via UPI</button>
-        <button class="btn btn-ghost btn-sm" onclick="toast('Dispute raised. Admin will call. (demo)')">⚖ Dispute</button>
-      </div>
-      <div class="glass card"><h3>🛡 Transparency</h3>
-        <p class="muted" style="font-size:14px">Fee 2% on shop only. Farmers free. <a href="#" onclick="toast('Open-source repo: github.com/demo/directharvest (demo)');return false">Open API + code</a>. Yearly report (demo): 120 farmers, 90 shops, +22% farmer price.</p>
-        <div class="row"><button class="btn btn-ghost btn-sm" onclick="ratePrompt()">⭐ Rate farmer/shop</button>
-        <button class="btn btn-ghost btn-sm" onclick="show('view-landing')">📢 Price board</button></div>
-      </div>
-    </div>
-  </div>
-
-  <footer>DirectHarvest demo • glass UI • EN / ಕನ್ನಡ / हिन्दी / മലയാളം • fees open • <span data-i="foot">every rupee visible</span></footer>
-</div>
-<div class="toast" id="toast"></div>
-<script src="app.js"></script>
-</body></html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AgriDirect — Wholesale Ag-Trade Escrow & Direct Logistics Network</title>
+    <meta name="description" content="Direct farm-to-retail agricultural trading exchange eliminating APMC middleman commissions with institutional digital escrow locks, live mandi price index, and cold-chain logistics." />
+    <meta property="og:title" content="AgriDirect — Wholesale Ag-Trade Escrow & Direct Logistics Network" />
+    <meta property="og:description" content="Direct farm-to-retail agricultural trading exchange eliminating APMC middleman commissions with institutional digital escrow locks, live mandi price index, and cold-chain logistics." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>
